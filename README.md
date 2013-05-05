@@ -1,2 +1,3 @@
-handlemail
-==========
+go build
+cd .mail
+handlemail *
