@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"io"
 	"bytes"
+	"strings"
 )
 
 var (
@@ -25,7 +26,7 @@ func reCreate(arg string,byts *[]byte){
 	errExit(err)
 	bffw:=bufio.NewWriter(f)
 	p:=*byts
-	bffw.Write(p[:len(p)-1])
+	bffw.Write(p[:len(p)])
 	bffw.Flush()
 
 }
@@ -38,20 +39,24 @@ func readMail(arg string)(bs []byte,needSync bool){
 	bffbyts:=bytes.Buffer{}
 	bffbyts.ReadFrom(bufr)
 	bs=make([]byte,0)
-	var nxt []byte
+	var prefix []byte
 	for {
 		l,err:=bffbyts.ReadBytes(byte('\n'))
-		bs=append(bs,l...)
 		if err==io.EOF{
 			break
 		}
-		nxt=bffbyts.Next(3)
-		if bytes.Equal(nxt,pattern)||bytes.Equal(nxt,patternAl){
+		if len(l)>3{
+			prefix=l[:3]
+			if bytes.Equal(prefix,pattern)||bytes.Equal(prefix,patternAl){
 			needSync=true
 			break
-		}else {
-			bs=append(bs,nxt...)
 
+			}else{
+				bs=append(bs,l...)
+			}
+
+		}else{
+			bs=append(bs,l...)
 		}
 
 	}
@@ -72,7 +77,11 @@ func handleMail(arg string){
 func main() {
 	args := os.Args
 	args = args[1:]
+	pwd:=os.Getenv("PWD")+"/"
 	for _,arg:=range args{
+		if !strings.HasPrefix(arg,"/"){
+			arg=pwd+arg
+		}
 		handleMail(arg)
 	}
 
